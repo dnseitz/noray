@@ -33,7 +33,7 @@ export function handleConnect(hostRepository: HostRepository) {
       let clientAddress: string = "";
       if (host.remoteAddress === client.remoteAddress) {
         const hostLocalAddress = stringifyLocalAddressOf(host);
-        const clientLocalAddress = stringifyLocalAddressOf(host);
+        const clientLocalAddress = stringifyLocalAddressOf(client);
         
         if (hostLocalAddress && clientLocalAddress) {
           hostAddress = hostLocalAddress;
