@@ -29,8 +29,28 @@ export function handleConnect(hostRepository: HostRepository) {
       assert(client.remoteAddress, "Client has no remote address registered!");
       assert(client.remotePort, "Client has no remote port registered!");
 
-      const hostAddress = stringifyAddressOf(host);
-      const clientAddress = stringifyAddressOf(client);
+      let hostAddress: string = "";
+      let clientAddress: string = "";
+      if (host.remoteAddress === client.remoteAddress) {
+        const hostLocalAddress = stringifyLocalAddressOf(host);
+        const clientLocalAddress = stringifyLocalAddressOf(host);
+        
+        if (hostLocalAddress && clientLocalAddress) {
+          hostAddress = hostLocalAddress;
+          clientAddress = clientLocalAddress;
+        } else {
+          log.warn(
+            { oid, address: socket.remoteAddress, port: socket.remotePort },
+            "Clients connecting from same network but no local address mappings found, this may cause issues in some networks"
+          )
+        }
+      }
+
+      if (!hostAddress || !clientAddress) {
+        // Local addresses not needed, use our remote addresses
+        hostAddress = stringifyAddressOf(host);
+        clientAddress = stringifyAddressOf(client);
+      }
 
       server.send(socket, { name: "connect", params: [hostAddress] });
       server.send(host.socket, { name: "connect", params: [clientAddress] });
@@ -94,6 +114,14 @@ export function handleConnectRelay(hostRepository: HostRepository) {
 
 function stringifyAddressOf(host: HostEntity) {
   return `${host.remoteAddress}:${host.remotePort}`;
+}
+
+function stringifyLocalAddressOf(host: HostEntity) {
+  if (!host.localRemoteAddress || !host.localRemotePort) {
+    return undefined;
+  }
+
+  return `${host.localRemoteAddress}:${host.localRemotePort}`;
 }
 
 function getRelayFor(host: HostEntity) {

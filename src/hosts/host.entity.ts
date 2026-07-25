@@ -49,6 +49,30 @@ export interface HostEntity {
    * This is the public port where the host receives UDP traffic.
    */
   remotePort: number | undefined;
+
+  /**
+   * Host's local address open for UDP.
+   * 
+   * This is the address in their internal LAN where the host receives UDP traffic.
+   * 
+   * For certain network topologies, a client and server on the same LAN trying to
+   * connect by exchanging address information through noray can fail to connect
+   * directly because their router remaps the source address to their local address,
+   * causing the ENet connection handshake to fail.
+   */
+  localRemoteAddress: string | undefined;
+
+  /**
+   * Host's local port open for UDP.
+   * 
+   * This is the port in their internal LAN where the host receives UDP traffic.
+   * 
+   * For certain network topologies, a client and server on the same LAN trying to
+   * connect by exchanging address information through noray can fail to connect
+   * directly because their router remaps the source address to their local address,
+   * causing the ENet connection handshake to fail.
+   */
+  localRemotePort: number | undefined;
 }
 
 export function makeHost(socket: Bun.Socket): HostEntity {
@@ -60,5 +84,7 @@ export function makeHost(socket: Bun.Socket): HostEntity {
     relay: undefined,
     remoteAddress: undefined,
     remotePort: undefined,
+    localRemoteAddress: undefined,
+    localRemotePort: undefined
   };
 }

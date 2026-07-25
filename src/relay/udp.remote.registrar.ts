@@ -84,7 +84,10 @@ export class UDPRemoteRegistrar {
     }
 
     try {
-      const pid = msg.toString("utf8");
+      const payload: string = msg.toString("utf8");
+      const payloadParts = payload.trim().split(/\s+/);
+      assert(payloadParts.length > 0, `Missing payload`)
+      const pid = payloadParts[0];
       log.debug(
         { pid, incomingAddress, incomingPort },
         "Received UDP relay request",
@@ -102,6 +105,24 @@ export class UDPRemoteRegistrar {
 
       host.remoteAddress = incomingAddress;
       host.remotePort = incomingPort;
+
+      if (payloadParts.length > 1) {
+        // Try to pull out the local address/port
+        const localAddressParts = payloadParts[1].split(':');
+        if (localAddressParts.length == 2) {
+          const localRemotePort = parseInt(localAddressParts[1]);
+          if (!Number.isNaN(localRemotePort)) {
+            host.localRemoteAddress = localAddressParts[0];
+            host.localRemotePort = localRemotePort;
+          }
+        } else {
+          log.warn(
+            { pid, incomingAddress, incomingPort },
+            `Malformed local address payload: ${payloadParts[1]}`
+          )
+        }
+      }
+
       this.socket.send("OK", incomingPort, incomingAddress);
       registerSuccessCounter.inc();
     } catch (e) {
